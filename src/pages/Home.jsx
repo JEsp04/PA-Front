@@ -1,10 +1,11 @@
-import { Hero } from "../components/Hero";
+import { Hero } from "../components/Hero"
+import { ProductList } from "../components/productList"
 
 export const Home = () => {
   return (
     <>
       <Hero />
-      {/* Aquí irán los demás componentes de la página de inicio, como "Productos Destacados", "Categorías", etc. */}
+      <ProductList />
     </>
   )
 }

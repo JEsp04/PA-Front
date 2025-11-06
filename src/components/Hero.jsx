@@ -68,7 +68,7 @@ export const Hero = () => {
   }, [currentIndex, goToNext]);
 
   return (
-    <section className="relative h-[85vh] md:h-screen w-full overflow-hidden">
+    <section className="relative h-120 md:h-180 w-full overflow-hidden">
       {slidesData.map((slide, index) => (
         <HeroSlide key={index} slide={slide} isActive={index === currentIndex} />
       ))}
