@@ -2,7 +2,7 @@ export const HeroSlide = ({ slide, isActive }) => {
   return (
     <div
       className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out ${
-        isActive ? "opacity-100" : "opacity-0"
+        isActive ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
       }`}
       aria-hidden={!isActive}
     >
