@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FiSearch, FiShoppingCart, FiUser, FiMenu, FiX } from 'react-icons/fi';
+import { Link, useNavigate } from 'react-router-dom'; // 1. Importa Link y useNavigate
+import useProductStore from '../store/useProductStore';
 
 const announcementMessages = [
   "Envío gratis en compras superiores a $200.000",
@@ -7,11 +9,36 @@ const announcementMessages = [
   "Suscríbete y obtén un 10% de descuento en tu primera compra",
 ];
 
+// Componente para un item de la lista de sugerencias
+const SuggestionItem = ({ product, onClick }) => (
+  <li onClick={onClick}>
+    <Link to={`/product/${product._id || product.id}`} className="flex items-center p-2 hover:bg-gray-100 rounded-md" key={product._id || product.id}>
+      <img src={product.imagenUrl} alt={product.nombre} className="w-12 h-12 object-cover rounded-md mr-4" />
+      <div className="flex-grow">
+        <p className="font-semibold text-sm text-gray-800">{product.nombre}</p>
+        <p className="text-xs text-gray-500">{product.marca}</p>
+      </div>
+      <p className="text-sm font-bold text-[#B8860B]">${product.precio.toLocaleString('es-CO')}</p>
+    </Link>
+  </li>
+);
+
 export const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [isFading, setIsFading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const { products, fetchProducts } = useProductStore();
+  const navigate = useNavigate();
+
+  // Cargar productos para la búsqueda
+  useEffect(() => {
+    if (products.length === 0) {
+      fetchProducts();
+    }
+  }, [products, fetchProducts]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -24,6 +51,36 @@ export const Header = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  // Actualizar sugerencias de búsqueda en tiempo real
+  useEffect(() => {
+    if (searchQuery.trim().length > 1) {
+      const filteredSuggestions = products.filter(product =>
+        product.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.marca.toLowerCase().includes(searchQuery.toLowerCase())
+      ).slice(0, 5); // Mostrar hasta 5 sugerencias
+      setSuggestions(filteredSuggestions);
+    } else {
+      setSuggestions([]);
+    }
+  }, [searchQuery, products]);
+
+  const handleSearchSubmit = (e) => {
+    if (e.key === 'Enter' && searchQuery.trim() !== '') {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      closeAndClearSearch();
+    }
+  };
+
+  const handleSuggestionClick = () => {
+    closeAndClearSearch();
+  };
+
+  const closeAndClearSearch = () => {
+    setSearchQuery('');
+    setSuggestions([]);
+    setIsSearchOpen(false);
+  };
 
   return (
     <header className="sticky top-0 z-50">
@@ -40,19 +97,19 @@ export const Header = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="shrink-0">
-            <a href="/" className="text-2xl font-serif text-[#0A0A0A]">El Zar</a>
+            <Link to="/" className="text-2xl font-serif text-[#0A0A0A]">El Zar</Link>
           </div>
 
           {/* Navigation */}
           <nav className="hidden md:flex md:items-center">
             <ul className="flex space-x-8">
-              <li><a href="#" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Marcas</a></li>
-              <li><a href="#" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Novedades</a></li>
-              <li><a href="#" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Mujer</a></li>
-              <li><a href="#" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Hombre</a></li>
-              <li><a href="#" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Colecciones</a></li>
-              <li><a href="#" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Sobre Nosotros</a></li>
-              <li><a href="#" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Ofertas</a></li>
+              <li><Link to="/marcas" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Marcas</Link></li>
+              <li><Link to="/novedades" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Novedades</Link></li>
+              <li><Link to="/mujer" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Mujer</Link></li>
+              <li><Link to="/hombre" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Hombre</Link></li>
+              <li><Link to="/colecciones" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Colecciones</Link></li>
+              <li><Link to="/sobre-nosotros" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Sobre Nosotros</Link></li>
+              <li><Link to="/ofertas" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Ofertas</Link></li>
             </ul>
           </nav>
 
@@ -70,16 +127,16 @@ export const Header = () => {
               <FiSearch className="w-5 h-5" />
             </button>
 
-            <a href="#" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">
+            <Link to="/cuenta" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">
               <span className="sr-only">Account</span>
               <FiUser className="w-5 h-5" />
-            </a>
+            </Link>
 
-            <a href="#" className="relative text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">
+            <Link to="/carrito" className="relative text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">
               <span className="sr-only">Cart</span>
               <FiShoppingCart className="w-5 h-5" />
               <span className="absolute -top-2 -right-2 text-xs text-white bg-[#D4AF37] rounded-full px-1.5">0</span>
-            </a>
+            </Link>
 
             {/* Botón de Menú para móviles */}
             <div className="md:hidden">
@@ -110,7 +167,17 @@ export const Header = () => {
             type="search"
             placeholder="Buscar fragancias..."
             className="w-full px-4 py-2 border border-[#C0C0C0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B8860B] bg-white"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleSearchSubmit}
           />
+          {suggestions.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-b-lg shadow-lg z-10">
+              <ul className="p-2">
+                {suggestions.map(product => <SuggestionItem key={product._id || product.id} product={product} onClick={handleSuggestionClick} />)}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
 
@@ -118,13 +185,13 @@ export const Header = () => {
       {isMenuOpen && (
         <div className="md:hidden bg-[#F5F5F5]">
           <ul className="flex flex-col items-center space-y-4 py-4 border-t border-[#E5E7EB]">
-            <li><a href="#" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Marcas</a></li>
-            <li><a href="#" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Novedades</a></li>
-            <li><a href="#" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Mujer</a></li>
-            <li><a href="#" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Hombre</a></li>
-            <li><a href="#" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Colecciones</a></li>
-            <li><a href="#" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Sobre Nosotros</a></li>
-            <li><a href="#" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Ofertas</a></li>
+            <li><Link to="/marcas" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Marcas</Link></li>
+            <li><Link to="/novedades" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Novedades</Link></li>
+            <li><Link to="/mujer" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Mujer</Link></li>
+            <li><Link to="/hombre" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Hombre</Link></li>
+            <li><Link to="/colecciones" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Colecciones</Link></li>
+            <li><Link to="/sobre-nosotros" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Sobre Nosotros</Link></li>
+            <li><Link to="/ofertas" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">Ofertas</Link></li>
           </ul>
         </div>
       )}
