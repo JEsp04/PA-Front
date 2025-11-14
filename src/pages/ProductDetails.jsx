@@ -1,52 +1,131 @@
-import { useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import {  useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { getProductById } from '../services/productService';
+import { FiShoppingCart, FiPlus, FiMinus } from 'react-icons/fi';
+import useCartStore from '../store/useCartStore';
 import useProductStore from '../store/useProductStore';
+import ProductCard from '../components/ProductCard';
 
-export const ProductDetails = () => {
-  const params = useParams();
-  console.log('[ProductDetails] params:', params);
+export default function ProductDetails() {
+  const { productoId } = useParams();
+  const navigate = useNavigate();
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [quantity, setQuantity] = useState(1);
 
-  // El ID viene de la URL, definido en App.jsx como :productId
-  const productId = params.productId ? Number(params.productId) : null;
+  const addProductToCart = useCartStore((state) => state.addProduct);
+  const { products, fetchProducts } = useProductStore();
 
-  // usa selectores individuales para reducir re-renders y dependencias
-  const selectedProduct = useProductStore(state => state.selectedProduct);
-  const fetchProductById = useProductStore(state => state.fetchProductById);
-  const loading = useProductStore(state => state.loading);
-  const error = useProductStore(state => state.error);
+  const handleQuantityChange = (amount) => {
+    setQuantity((prev) => Math.max(1, prev + amount));
+  };
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    addProductToCart(product, quantity);
+    // Redirige al carrito y pasa el nombre del producto para mostrar la notificación
+    navigate('/carrito', { state: { productAdded: product.nombre } });
+  };
+
 
   useEffect(() => {
-    // solo llamar si es un número válido (finite)
-    if (!Number.isFinite(productId)) return;
-    fetchProductById(productId);
-  }, [productId, fetchProductById]);
+    const fetchProduct = async () => {
+      try {
+        const data = await getProductById(productoId);
+        // Si no hay productos en el store principal, cárgalos
+        if (products.length === 0) {
+          fetchProducts();
+        }
+        setProduct(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  console.log('[ProductDetails] selectedProduct:', selectedProduct, 'loading:', loading, 'error:', error);
+    if (productoId) {
+      fetchProduct();
+    }
+  }, [productoId, products.length, fetchProducts]);
 
-  if (loading) return <div className="text-center py-10">Cargando detalles del producto...</div>;
-  if (error) return <div className="text-center py-10 text-red-500">Error: {error.message || 'No se pudo cargar el producto.'}</div>;
-  if (!selectedProduct) return <div className="text-center py-10">Producto no encontrado. <Link to="/" className="text-[#B8860B] hover:underline">Volver al inicio</Link></div>;
+  if (loading) return <p className="text-center py-8">Cargando producto...</p>;
+  if (error) return <p className="text-center py-8 text-red-600">Error: {error}</p>;
+  if (!product) return <p className="text-center py-8">Producto no encontrado</p>;
+
+  // Filtra productos relacionados (misma marca, excluyendo el actual)
+  const relatedProducts = products
+    .filter(
+      (p) =>
+        p.marca === product.marca &&
+        p.productoId !== product.productoId
+    )
+    .slice(0, 4); // Muestra hasta 4 productos relacionados
+
+  const precioDisplay = `$${Number(product.precio || 0).toLocaleString('es-CO')}`;
+  const imageSrc = product?.imagenUrl ?? product?.imagen ?? 'https://via.placeholder.com/600x600?text=Sin+imagen';
 
   return (
     <div className="bg-white">
-      <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div>
-          <img src={selectedProduct.imagenUrl} alt={selectedProduct.nombre} className="w-full aspect-square object-cover rounded-lg shadow-md"/>
-        </div>
-        <div className="flex flex-col justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">{selectedProduct.nombre}</h1>
-            <h2 className="text-xl text-gray-500 mt-2">{selectedProduct.marca}</h2>
-            <p className="text-gray-700 mt-4">{selectedProduct.descripcion || 'Descripción no disponible'}</p>
+      <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-y-10 gap-x-12 md:grid-cols-2">
+          {/* Galería de Imágenes */}
+          <div className="flex items-start justify-center">
+            <div className="aspect-square w-full max-w-md overflow-hidden rounded-lg border border-gray-200">
+              <img
+                src={imageSrc}
+                alt={product.nombre}
+                className="h-full w-full object-cover object-center"
+              />
+            </div>
           </div>
-          <div>
-            <p className="text-2xl font-semibold text-gray-900">${(selectedProduct.precio ?? 0).toLocaleString('es-CO')}</p>
-            <button className="mt-6 bg-[#D4AF37] hover:bg-[#B8860B] text-[#0A0A0A] font-bold py-3 px-8 rounded-md transition-colors duration-200">
-              Añadir al carrito
-            </button>
+
+          {/* Detalles del Producto */}
+          <div className="flex flex-col justify-center">
+            <p className="text-sm font-medium uppercase tracking-wider text-gray-500">{product.marca ?? 'Marca Desconocida'}</p>
+            <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{product.nombre}</h1>
+            <p className="mt-4 text-3xl tracking-tight text-gray-900">{precioDisplay}</p>
+
+            <div className="mt-6">
+              <h3 className="sr-only">Descripción</h3>
+              <div className="space-y-6 text-base text-gray-700">
+                <p>{product.descripcion ?? 'No hay descripción disponible para este producto.'}</p>
+              </div>
+            </div>
+
+            <div className="mt-8 flex items-center space-x-4">
+              {/* Selector de Cantidad */}
+              <div className="flex items-center rounded-md border border-gray-300">
+                <button onClick={() => handleQuantityChange(-1)} className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-l-md transition" aria-label="Disminuir cantidad"><FiMinus /></button>
+                <span className="px-4 py-1.5 text-lg font-medium text-gray-800">{quantity}</span>
+                <button onClick={() => handleQuantityChange(1)} className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-r-md transition" aria-label="Aumentar cantidad"><FiPlus /></button>
+              </div>
+
+              {/* Botón Añadir al Carrito */}
+              <button
+                onClick={handleAddToCart}
+                className="flex flex-1 items-center justify-center rounded-md border border-transparent bg-[#D4AF37] py-3 px-8 text-base font-bold text-[#0A0A0A] hover:bg-[#B8860B] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:ring-offset-2 transition-transform transform hover:scale-105"
+              >
+                <FiShoppingCart className="mr-2 h-5 w-5" />
+                Añadir al carrito
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Sección de Productos Relacionados */}
+      {relatedProducts.length > 0 && (
+        <div className="container mx-auto px-4 py-16 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold tracking-tight text-gray-900">También te podría interesar</h2>
+          <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
+            {relatedProducts.map((relatedProduct) => (
+              <ProductCard key={relatedProduct.productoId} product={relatedProduct} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
-};
+}

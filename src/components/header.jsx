@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { FiSearch, FiShoppingCart, FiUser, FiMenu, FiX } from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom'; // 1. Importa Link y useNavigate
 import useProductStore from '../store/useProductStore';
+import useCartStore from '../store/useCartStore';
 
 const announcementMessages = [
   "Envío gratis en compras superiores a $200.000",
@@ -12,7 +13,7 @@ const announcementMessages = [
 // Componente para un item de la lista de sugerencias
 const SuggestionItem = ({ product, onClick }) => (
   <li onClick={onClick}>
-    <Link to={`/product/${product._id || product.id}`} className="flex items-center p-2 hover:bg-gray-100 rounded-md" key={product._id || product.id}>
+    <Link to={`/productos/${product.productoId || product.productid || product.productoid}`} className="flex items-center p-2 hover:bg-gray-100 rounded-md" key={product._id || product.id}>
       <img src={product.imagenUrl} alt={product.nombre} className="w-12 h-12 object-cover rounded-md mr-4" />
       <div className="flex-grow">
         <p className="font-semibold text-sm text-gray-800">{product.nombre}</p>
@@ -31,6 +32,7 @@ export const Header = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const { products, fetchProducts } = useProductStore();
+  const totalItemsInCart = useCartStore((state) => state.getTotalItems());
   const navigate = useNavigate();
 
   // Cargar productos para la búsqueda
@@ -135,7 +137,9 @@ export const Header = () => {
             <Link to="/carrito" className="relative text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">
               <span className="sr-only">Cart</span>
               <FiShoppingCart className="w-5 h-5" />
-              <span className="absolute -top-2 -right-2 text-xs text-white bg-[#D4AF37] rounded-full px-1.5">0</span>
+              {totalItemsInCart > 0 && (
+                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#D4AF37] text-xs font-bold text-[#0A0A0A]">{totalItemsInCart}</span>
+              )}
             </Link>
 
             {/* Botón de Menú para móviles */}

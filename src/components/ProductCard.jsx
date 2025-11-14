@@ -1,12 +1,17 @@
 import { FiShoppingCart } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
+import useCartStore from "../store/useCartStore";
+
+
+
 
 export const ProductCard = ({ product }) => {
-  console.log('[ProductCard] product:', product);
+  const { addProduct } = useCartStore();
+  // id robusto: acepta productoId, productId, id o _id
+  const id = product?.productoId ?? product?.productId ?? product?.id ?? product?._id ?? null;
+  console.log("ID DEL PRODUCTO EN PRODUCT CARD",id)
 
-  // id robusto: acepta productId, id o _id (si no existe, no envolver en Link)
-  const id = product?.productId ?? product?.id ?? product?._id ?? null;
-
+  console.log(product,"PRODUCTOOOO")
   // posibles nombres para la imagen
   const imageSrc =
     product?.imagenUrl ??
@@ -22,7 +27,6 @@ export const ProductCard = ({ product }) => {
   const precio = Number(precioRaw) || 0;
   const precioDisplay = `$${precio.toLocaleString('es-CO')}`;
 
-  // Si no hay imagen, puedes usar placeholder
   const placeholder = 'https://via.placeholder.com/400x400?text=Sin+imagen';
 
   const cardContent = (
@@ -45,18 +49,21 @@ export const ProductCard = ({ product }) => {
         </div>
       </div>
       <button
-        className="absolute bottom-4 right-4 z-10 flex items-center justify-center w-10 h-10 bg-[#D4AF37] text-[#0A0A0A] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform hover:scale-110"
-        aria-label="Añadir al carrito"
-        type="button"
-      >
-        <FiShoppingCart className="w-5 h-5" />
-      </button>
+  onClick={() => addProduct(product, 1)}
+  className="absolute bottom-4 right-4 z-10 flex items-center justify-center 
+             w-10 h-10 bg-[#D4AF37] text-[#0A0A0A] rounded-full opacity-0 
+             group-hover:opacity-100 transition-opacity duration-300 
+             transform hover:scale-110"
+  aria-label="Añadir al carrito"
+  type="button"
+>
+  <FiShoppingCart className="w-5 h-5" />
+</button>
+
     </div>
   );
 
-  // Si hay id, envolver en Link; si no, devolver sólo la tarjeta (evita "Producto sin id")
   if (id) {
-    // usar la ruta que tienes en App.jsx (/productos/:productId)
     return (
       <Link to={`/productos/${id}`} className="block">
         {cardContent}
@@ -64,7 +71,6 @@ export const ProductCard = ({ product }) => {
     );
   }
 
-  // Sin id: renderizar la tarjeta sin Link y loguear advertencia
   return <div className="block">{cardContent}</div>;
 };
 

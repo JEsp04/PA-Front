@@ -16,3 +16,14 @@ export const getProducts = async () => {
     throw error;
   }
 };
+
+export const getProductById = async (id) => {
+  try {
+    const response = await api.get(`/productos/obtenerPor/${id}`);
+    return response.data;
+  }
+  catch (error) {
+    console.error("Error en getProductById:", error.response?.data || error.message);
+    throw error;
+  }
+};

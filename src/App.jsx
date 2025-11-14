@@ -5,8 +5,9 @@ import { Home } from './pages/Home.jsx'
 import { Footer } from './components/Footer'; // Importa el nuevo componente Footer
 import { AboutUs } from './pages/AboutUs'; // Importa tu nueva página
 import { Offers } from './pages/Offers'; // Importa tu nueva página de Ofertas
-import { ProductDetails } from './pages/ProductDetails';
 import { SearchResults } from './pages/SearchResults'; // Importa la página de resultados de búsqueda
+import { Cart } from './pages/Cart'; // Importa la nueva página del carrito
+import ProductDetails from './pages/ProductDetails';
 
 function AppContent() { // Creamos un componente interno para usar useLocation
   const location = useLocation();
@@ -29,9 +30,9 @@ function AppContent() { // Creamos un componente interno para usar useLocation
           <Route path="/" element={<Home />} />
           <Route path="/sobre-nosotros" element={<AboutUs />} />
           <Route path="/ofertas" element={<Offers />} /> {/* Nueva ruta para Ofertas */}
-          <Route path="/productos/:productId" element={<ProductDetails />} />
-          <Route path="/product/:productId" element={<ProductDetails />} /> {/* Alias para enlaces que usan /product/... */}
+          <Route path="/productos/:productoId" element={<ProductDetails />} /> {/* Alias para enlaces que usan /product/... */}
           <Route path="/search" element={<SearchResults />} /> {/* Nueva ruta para la búsqueda */}
+          <Route path="/carrito" element={<Cart />} /> {/* Nueva ruta para el carrito */}
         </Routes>
       </main>
       {shouldShowFooter && <Footer />} {/* Renderiza el Footer condicionalmente */}
@@ -39,12 +40,10 @@ function AppContent() { // Creamos un componente interno para usar useLocation
   );
 }
 
-function App() {
+export default function App() {
   return (
     <Router> {/* Envuelve toda la aplicación en BrowserRouter */}
       <AppContent /> {/* Renderiza el nuevo componente AppContent */}
     </Router>
   )
 }
-
-export default App
