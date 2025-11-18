@@ -15,7 +15,7 @@ const SuggestionItem = ({ product, onClick }) => (
   <li onClick={onClick}>
     <Link to={`/productos/${product.productoId || product.productid || product.productoid}`} className="flex items-center p-2 hover:bg-gray-100 rounded-md" key={product._id || product.id}>
       <img src={product.imagenUrl} alt={product.nombre} className="w-12 h-12 object-cover rounded-md mr-4" />
-      <div className="flex-grow">
+      <div className="grow">
         <p className="font-semibold text-sm text-gray-800">{product.nombre}</p>
         <p className="text-xs text-gray-500">{product.marca}</p>
       </div>
@@ -129,7 +129,7 @@ export const Header = () => {
               <FiSearch className="w-5 h-5" />
             </button>
 
-            <Link to="/cuenta" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">
+            <Link to="/Autenticacion" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">
               <span className="sr-only">Account</span>
               <FiUser className="w-5 h-5" />
             </Link>

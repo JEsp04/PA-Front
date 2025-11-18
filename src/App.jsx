@@ -8,7 +8,8 @@ import { Offers } from './pages/Offers'; // Importa tu nueva página de Ofertas
 import { SearchResults } from './pages/SearchResults'; // Importa la página de resultados de búsqueda
 import { Cart } from './pages/Cart'; // Importa la nueva página del carrito
 import ProductDetails from './pages/ProductDetails';
-
+import Login  from './pages/Login.jsx'; // Importa la página de login
+import Register from './pages/Register.jsx';
 function AppContent() { // Creamos un componente interno para usar useLocation
   const location = useLocation();
 
@@ -25,7 +26,7 @@ function AppContent() { // Creamos un componente interno para usar useLocation
   return (
     <div className='min-h-screen bg-white flex flex-col'>
       {shouldShowHeader && <Header />} {/* Renderiza el Header condicionalmente */}
-      <main className="flex-grow">
+      <main className="grow">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/sobre-nosotros" element={<AboutUs />} />
@@ -33,6 +34,9 @@ function AppContent() { // Creamos un componente interno para usar useLocation
           <Route path="/productos/:productoId" element={<ProductDetails />} /> {/* Alias para enlaces que usan /product/... */}
           <Route path="/search" element={<SearchResults />} /> {/* Nueva ruta para la búsqueda */}
           <Route path="/carrito" element={<Cart />} /> {/* Nueva ruta para el carrito */}
+          <Route path="/Autenticacion" element={<Login />} /> {/* Nueva ruta para la autenticacion */}
+          <Route path="/Autenticacion/Registro" element={<Register />} /> {/* Nueva ruta para la autenticacion */}
+
         </Routes>
       </main>
       {shouldShowFooter && <Footer />} {/* Renderiza el Footer condicionalmente */}
