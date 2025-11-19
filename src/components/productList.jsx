@@ -28,9 +28,10 @@ export const ProductList = () => {
         <h2 className="text-2xl font-bold tracking-tight text-gray-900">Nuestros Productos</h2>
 
         <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
-          {products.map((product) => (
-            <ProductCard key={product.productId} product={product} />
-          ))}
+          {products.map((product) => {
+            const key = product?.productoId ?? product?.productId ?? product?.id ?? product?._id ?? Math.random();
+            return <ProductCard key={key} product={product} />;
+          })}
         </div>
       </div>
     </div>

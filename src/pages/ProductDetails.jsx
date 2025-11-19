@@ -2,10 +2,10 @@ import {  useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getProductById } from '../services/productService';
 import { FiShoppingCart, FiPlus, FiMinus } from 'react-icons/fi';
-import useCartStore from '../store/useCartStore';
+import {useCartStore} from '../store/useCartStore';
 import useProductStore from '../store/useProductStore';
 import ProductCard from '../components/ProductCard';
-
+import { useAuthStore } from '../store/useAuthStore';
 export default function ProductDetails() {
   const { productoId } = useParams();
   const navigate = useNavigate();
@@ -14,7 +14,8 @@ export default function ProductDetails() {
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
 
-  const addProductToCart = useCartStore((state) => state.addProduct);
+  const addProductToCart = useCartStore((state) => state.addToCart);
+  const {user} = useAuthStore();
   const { products, fetchProducts } = useProductStore();
 
   const handleQuantityChange = (amount) => {
@@ -23,7 +24,7 @@ export default function ProductDetails() {
 
   const handleAddToCart = () => {
     if (!product) return;
-    addProductToCart(product, quantity);
+    addProductToCart(user?.usuarioId, product, quantity);
     // Redirige al carrito y pasa el nombre del producto para mostrar la notificación
     navigate('/carrito', { state: { productAdded: product.nombre } });
   };

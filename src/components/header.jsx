@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react';
 import { FiSearch, FiShoppingCart, FiUser, FiMenu, FiX } from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom'; // 1. Importa Link y useNavigate
 import useProductStore from '../store/useProductStore';
-import useCartStore from '../store/useCartStore';
+import {useCartStore} from '../store/useCartStore';
+import { useAuthStore } from "../store/useAuthStore";
+import { motion, AnimatePresence } from "framer-motion";
+
 
 const announcementMessages = [
   "Envío gratis en compras superiores a $200.000",
@@ -34,6 +37,8 @@ export const Header = () => {
   const { products, fetchProducts } = useProductStore();
   const totalItemsInCart = useCartStore((state) => state.getTotalItems());
   const navigate = useNavigate();
+  const { user, isAuthenticated, logout } = useAuthStore();
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   // Cargar productos para la búsqueda
   useEffect(() => {
@@ -129,10 +134,68 @@ export const Header = () => {
               <FiSearch className="w-5 h-5" />
             </button>
 
-            <Link to="/Autenticacion" className="text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">
-              <span className="sr-only">Account</span>
-              <FiUser className="w-5 h-5" />
+            <div className="relative">
+  <button
+    onClick={() => setUserMenuOpen(!userMenuOpen)}
+    className="text-[#6E6E6E] hover:text-[#D4AF37]"
+  >
+    <FiUser className="w-5 h-5" />
+  </button>
+
+  <AnimatePresence>
+    {userMenuOpen && (
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        className="absolute right-0 mt-3 bg-white shadow-xl rounded-xl p-4 w-56 border border-gray-100"
+      >
+        {!isAuthenticated ? (
+          // Si NO está logueado → botón de iniciar sesión
+          <Link
+            to="/Autenticacion"
+            className="block text-center text-gray-700 hover:text-black font-semibold"
+            onClick={() => setUserMenuOpen(false)}
+          >
+            Iniciar sesión
+          </Link>
+        ) : (
+          <>
+            <p className="font-semibold text-gray-800">{user.nombre}</p>
+            <p className="text-sm text-gray-500">{user.email}</p>
+
+            <div className="h-px bg-gray-200 my-3" />
+
+            <Link
+              to="/perfil"
+              className="block text-gray-700 hover:text-black mb-2"
+            >
+              Mi perfil
             </Link>
+
+            <Link
+              to="/pedidos"
+              className="block text-gray-700 hover:text-black mb-2"
+            >
+              Mis pedidos
+            </Link>
+
+            <button
+              onClick={() => {
+                logout();
+                setUserMenuOpen(false);
+              }}
+              className="block w-full text-left text-red-500 hover:text-red-700 font-semibold"
+            >
+              Cerrar sesión
+            </button>
+          </>
+        )}
+      </motion.div>
+    )}
+  </AnimatePresence>
+</div>
+
 
             <Link to="/carrito" className="relative text-[#6E6E6E] hover:text-[#D4AF37] transition-colors duration-200">
               <span className="sr-only">Cart</span>

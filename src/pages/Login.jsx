@@ -13,11 +13,18 @@ export default function Login() {
     if (isLoading) return;
 
     setIsLoading(true);
-    const result = await loginStore.login(form);
-    setIsLoading(false);
+    try {
+      const result = await loginStore.login(form);
+      setIsLoading(false);
 
-    if (result.success) {
-      navigate("/");
+      console.log('Login result:', result);
+
+      if (result.success) {
+        navigate("/");
+      }
+    } catch (err) {
+      setIsLoading(false);
+      console.error('Error inesperado en handleSubmit:', err);
     }
   };
 

@@ -1,15 +1,17 @@
 import './App.css'
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'; // Importa useLocation
-import { Header } from './components/header'
+import { Header } from './components/Header.jsx'
 import { Home } from './pages/Home.jsx'
 import { Footer } from './components/Footer'; // Importa el nuevo componente Footer
 import { AboutUs } from './pages/AboutUs'; // Importa tu nueva página
 import { Offers } from './pages/Offers'; // Importa tu nueva página de Ofertas
 import { SearchResults } from './pages/SearchResults'; // Importa la página de resultados de búsqueda
-import { Cart } from './pages/Cart'; // Importa la nueva página del carrito
+import {Cart} from './pages/Cart'; // Importa la nueva página del carrito
 import ProductDetails from './pages/ProductDetails';
 import Login  from './pages/Login.jsx'; // Importa la página de login
 import Register from './pages/Register.jsx';
+import Notification from './components/Notificacion.jsx';
+
 function AppContent() { // Creamos un componente interno para usar useLocation
   const location = useLocation();
 
@@ -25,7 +27,9 @@ function AppContent() { // Creamos un componente interno para usar useLocation
 
   return (
     <div className='min-h-screen bg-white flex flex-col'>
+      <Notification /> {/* Componente de notificaciones */}
       {shouldShowHeader && <Header />} {/* Renderiza el Header condicionalmente */}
+      
       <main className="grow">
         <Routes>
           <Route path="/" element={<Home />} />

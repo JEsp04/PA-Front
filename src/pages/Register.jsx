@@ -21,7 +21,7 @@ export default function Register() {
     setIsLoading(false);
 
     if (success.success) {
-      navigate("/Autenticacion");
+      navigate("/");
     }
   };
 

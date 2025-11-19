@@ -1,59 +1,157 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import {
+  obtenerCarritoUsuario,
+  sincronizarCarrito,
+  crearCarrito,
+} from "../services/cartService";
 
-const useCartStore = create(
-  persist(
-    (set, get) => ({
-      items: [], // { product, quantity }
-      
-      // Añade un producto al carrito o actualiza su cantidad
-      addProduct: (product, quantity) => {
-        const { items } = get();
-        const existingItem = items.find(item => item.product.productoId === product.productoId);
+export const useCartStore = create((set, get) => ({
+  carritoId: null,
+  items: [],
+  loading: false,
+  error: null,
 
-        if (existingItem) {
-          // Si el producto ya está, actualiza la cantidad
-          const updatedItems = items.map(item =>
-            item.product.productoId === product.productoId
-              ? { ...item, quantity: item.quantity + quantity }
-              : item
-          );
-          set({ items: updatedItems });
-        } else {
-          // Si es un producto nuevo, lo añade al carrito
-          set({ items: [...items, { product, quantity }] });
+  // ========================
+  // Cargar carrito al inicio
+  // ========================
+  loadCart: async (usuarioId) => {
+    try {
+      set({ loading: true });
+
+      const res = await obtenerCarritoUsuario(usuarioId);
+      const carrito = res.data;
+
+      set({
+        carritoId: carrito.carritoId,
+        items:
+          carrito.CarritoDetalles?.map((d) => ({
+            productoId: d.productoId,
+            quantity: d.cantidad,
+            precioUnitario: d.precioUnitario,
+            product: d.Product || null,
+          })) || [],
+      });
+    } catch (error) {
+      console.error('Error loading cart:', error);
+      // Si el backend responde 404, intentamos crear un carrito vacío sincronizando
+      const status = error?.response?.status;
+      if (status === 404) {
+        try {
+          // Intentar crear carrito usando el endpoint específico de creación
+          await crearCarrito(usuarioId);
+          // Reintentar obtener el carrito recién creado
+          const res2 = await obtenerCarritoUsuario(usuarioId);
+          const carrito2 = res2.data;
+          set({
+            carritoId: carrito2.carritoId,
+            items:
+              carrito2.CarritoDetalles?.map((d) => ({
+                productoId: d.productoId,
+                quantity: d.cantidad,
+                precioUnitario: d.precioUnitario,
+                product: d.Product || null,
+              })) || [],
+          });
+        } catch (err2) {
+          console.error('Error creating cart after 404:', err2);
+          set({ error: 'Error creando carrito' });
         }
-      },
-
-      // Actualiza la cantidad de un producto específico
-      updateQuantity: (productId, newQuantity) => {
-        set((state) => ({
-          items: state.items
-            .map((item) =>
-              item.product.productoId === productId
-                ? { ...item, quantity: newQuantity }
-                : item
-            )
-            .filter((item) => item.quantity > 0), // Elimina el item si la cantidad es 0
-        }));
-      },
-
-      // Elimina un producto del carrito
-      removeProduct: (productId) => {
-        set((state) => ({
-          items: state.items.filter((item) => item.product.productoId !== productId),
-        }));
-      },
-
-      // Devuelve el número total de artículos en el carrito
-      getTotalItems: () => {
-        return get().items.reduce((total, item) => total + item.quantity, 0);
-      },
-    }),
-    {
-      name: 'cart-storage', // Nombre para la persistencia en localStorage
+      } else {
+        set({ error: 'Error cargando carrito' });
+      }
+    } finally {
+      set({ loading: false });
     }
-  )
-);
+  },
 
-export default useCartStore;
+  // ========================
+  // Agregar producto
+  // ========================
+  addToCart: async (usuarioId, product, quantity) => {
+    const { items } = get();
+
+    const updated = [...items];
+
+    // Resolver id y precio robustamente (varios esquemas de producto)
+    const resolvedId = product?.productoId ?? product?.productId ?? product?.id ?? product?._id ?? null;
+    const resolvedPrice = Number(product?.precio ?? product?.price ?? product?.precioUnitario ?? 0) || 0;
+
+    const existing = updated.find((i) => i.productoId === resolvedId);
+
+    if (existing) {
+      existing.quantity += quantity;
+    } else {
+      updated.push({
+        productoId: resolvedId,
+        quantity,
+        precioUnitario: resolvedPrice,
+        product,
+      });
+    }
+
+    set({ items: updated });
+
+    // Filtrar items inválidos y preparar payload esperado por el backend
+    const payloadItems = updated
+      .filter((i) => i.productoId !== undefined && i.productoId !== null)
+      .map((i) => ({ productoId: i.productoId, cantidad: Number(i.quantity) || 1 }));
+
+    console.debug('Sincronizando carrito (addToCart) payload=', { usuarioId, items: payloadItems });
+    try {
+      const res = await sincronizarCarrito(usuarioId, payloadItems);
+      console.debug('sincronizarCarrito response:', res?.data || res);
+    } catch (err) {
+      console.error('Error sincronizando carrito en addToCart:', err, 'payload=', payloadItems);
+      set({ error: 'Error sincronizando carrito' });
+    }
+  },
+
+  // ========================
+  // Actualizar cantidad
+  // ========================
+  updateQuantity: async (usuarioId, productoId, newQuantity) => {
+    const updated = get().items.map((i) =>
+      i.productoId === productoId ? { ...i, quantity: newQuantity } : i
+    );
+
+    set({ items: updated });
+    const payloadItems = updated
+      .filter((i) => i.productoId !== undefined && i.productoId !== null)
+      .map((i) => ({ productoId: i.productoId, cantidad: Number(i.quantity) || 1 }));
+    try {
+      const res = await sincronizarCarrito(usuarioId, payloadItems);
+      console.debug('sincronizarCarrito response (updateQuantity):', res?.data || res);
+    } catch (err) {
+      console.error('Error sincronizando carrito en updateQuantity:', err, 'payload=', payloadItems);
+      set({ error: 'Error sincronizando carrito' });
+    }
+  },
+
+  // ========================
+  // Eliminar item
+  // ========================
+  removeProduct: async (usuarioId, productoId) => {
+    const updated = get().items.filter(
+      (i) => i.productoId !== productoId
+    );
+
+    set({ items: updated });
+    const payloadItems = updated
+      .filter((i) => i.productoId !== undefined && i.productoId !== null)
+      .map((i) => ({ productoId: i.productoId, cantidad: Number(i.quantity) || 1 }));
+    try {
+      const res = await sincronizarCarrito(usuarioId, payloadItems);
+      console.debug('sincronizarCarrito response (removeProduct):', res?.data || res);
+    } catch (err) {
+      console.error('Error sincronizando carrito en removeProduct:', err, 'payload=', payloadItems);
+      set({ error: 'Error sincronizando carrito' });
+    }
+  },
+
+  // ========================
+  // Total items
+  // ========================
+  getTotalItems: () => {
+    return get().items.reduce((acc, i) => acc + i.quantity, 0);
+  },
+}));

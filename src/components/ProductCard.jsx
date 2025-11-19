@@ -1,18 +1,18 @@
 import { FiShoppingCart } from 'react-icons/fi';
-import { Link } from 'react-router-dom';
-import useCartStore from "../store/useCartStore";
+import { Link, useNavigate } from 'react-router-dom';
+import {useCartStore} from "../store/useCartStore";
+import { useAuthStore } from '../store/useAuthStore';
 
 
 
 
 export const ProductCard = ({ product }) => {
-  const { addProduct } = useCartStore();
+  const addToCart = useCartStore((s) => s.addToCart);
+  const { user } = useAuthStore();
+  const navigate = useNavigate();
   // id robusto: acepta productoId, productId, id o _id
   const id = product?.productoId ?? product?.productId ?? product?.id ?? product?._id ?? null;
-  console.log("ID DEL PRODUCTO EN PRODUCT CARD",id)
 
-  console.log(product,"PRODUCTOOOO")
-  // posibles nombres para la imagen
   const imageSrc =
     product?.imagenUrl ??
     product?.imagen ??
@@ -49,7 +49,11 @@ export const ProductCard = ({ product }) => {
         </div>
       </div>
       <button
-  onClick={() => addProduct(product, 1)}
+      onClick={(e) => {
+        e.preventDefault();
+        if (!user) return navigate('/Autenticacion');
+        addToCart(user.usuarioId, product, 1);
+      }}
   className="absolute bottom-4 right-4 z-10 flex items-center justify-center 
              w-10 h-10 bg-[#D4AF37] text-[#0A0A0A] rounded-full opacity-0 
              group-hover:opacity-100 transition-opacity duration-300 
