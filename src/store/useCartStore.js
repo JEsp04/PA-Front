@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import {
-  obtenerCarritoUsuario,
+  obtenerCarritoPorUsuario,
   sincronizarCarrito,
   crearCarrito,
 } from "../services/cartService";
@@ -12,52 +12,65 @@ export const useCartStore = create((set, get) => ({
   error: null,
 
   // ========================
+  // Limpiar carrito
+  // ========================
+  clearCart: () =>
+    set({
+      carritoId: null,
+      items: [],
+      loading: false,
+      error: null,
+    }),
+
+  // ========================
   // Cargar carrito al inicio
   // ========================
   loadCart: async (usuarioId) => {
     try {
       set({ loading: true });
 
-      const res = await obtenerCarritoUsuario(usuarioId);
-      const carrito = res.data;
+      const carrito = await obtenerCarritoPorUsuario(usuarioId);
 
       set({
         carritoId: carrito.carritoId,
         items:
           carrito.CarritoDetalles?.map((d) => ({
             productoId: d.productoId,
-            quantity: d.cantidad,
+            cantidad: d.cantidad,
             precioUnitario: d.precioUnitario,
-            product: d.Product || null,
+            subtotal: d.subtotal,
+            Product: d.Product || null, // ← añadir producto completo
           })) || [],
+        error: null,
       });
     } catch (error) {
-      console.error('Error loading cart:', error);
-      // Si el backend responde 404, intentamos crear un carrito vacío sincronizando
-      const status = error?.response?.status;
-      if (status === 404) {
+      console.error("Error loading cart:", error);
+
+      // Si el backend responde 404, no existe carrito → crear uno
+      if (error?.response?.status === 404) {
         try {
-          // Intentar crear carrito usando el endpoint específico de creación
           await crearCarrito(usuarioId);
-          // Reintentar obtener el carrito recién creado
-          const res2 = await obtenerCarritoUsuario(usuarioId);
-          const carrito2 = res2.data;
+
+          const carrito2 = await obtenerCarritoPorUsuario(usuarioId);
+
           set({
             carritoId: carrito2.carritoId,
             items:
               carrito2.CarritoDetalles?.map((d) => ({
                 productoId: d.productoId,
-                quantity: d.cantidad,
+                cantidad: d.cantidad,
                 precioUnitario: d.precioUnitario,
-                product: d.Product || null,
+                subtotal: d.subtotal,
+                Product: d.Product || null, // ← añadir producto completo
               })) || [],
+            error: null,
           });
         } catch (err2) {
-          console.error('Error creating cart after 404:', err2);
-          set({ error: 'Error creando carrito' });
+          console.error("Error creating cart:", err2);
+          set({ error: "Error creando carrito" });
         }
       } else {
-        set({ error: 'Error cargando carrito' });
+        set({ error: "Error cargando carrito" });
       }
     } finally {
       set({ loading: false });
@@ -67,42 +80,41 @@ export const useCartStore = create((set, get) => ({
   // ========================
   // Agregar producto
   // ========================
-  addToCart: async (usuarioId, product, quantity) => {
+  addToCart: async (usuarioId, product, cantidad) => {
     const { items } = get();
 
     const updated = [...items];
 
-    // Resolver id y precio robustamente (varios esquemas de producto)
-    const resolvedId = product?.productoId ?? product?.productId ?? product?.id ?? product?._id ?? null;
-    const resolvedPrice = Number(product?.precio ?? product?.price ?? product?.precioUnitario ?? 0) || 0;
+    const resolvedId = product?.productoId ?? null;
+    const resolvedPrice = Number(product?.precioUnitario ?? 0);
 
     const existing = updated.find((i) => i.productoId === resolvedId);
 
     if (existing) {
-      existing.quantity += quantity;
+      existing.cantidad += cantidad;
     } else {
       updated.push({
         productoId: resolvedId,
-        quantity,
+        cantidad,
         precioUnitario: resolvedPrice,
-        product,
+        Product: product, // ← guardar el objeto producto completo
       });
     }
 
     set({ items: updated });
 
-    // Filtrar items inválidos y preparar payload esperado por el backend
     const payloadItems = updated
-      .filter((i) => i.productoId !== undefined && i.productoId !== null)
-      .map((i) => ({ productoId: i.productoId, cantidad: Number(i.quantity) || 1 }));
+      .filter((i) => i.productoId != null)
+      .map((i) => ({
+        productoId: i.productoId,
+        cantidad: Number(i.cantidad),
+      }));
 
-    console.debug('Sincronizando carrito (addToCart) payload=', { usuarioId, items: payloadItems });
     try {
-      const res = await sincronizarCarrito(usuarioId, payloadItems);
-      console.debug('sincronizarCarrito response:', res?.data || res);
+      await sincronizarCarrito(usuarioId, payloadItems);
     } catch (err) {
-      console.error('Error sincronizando carrito en addToCart:', err, 'payload=', payloadItems);
-      set({ error: 'Error sincronizando carrito' });
+      console.error("Error sincronizando carrito en addToCart:", err);
+      set({ error: "Error sincronizando carrito" });
     }
   },
 
@@ -111,19 +123,23 @@ export const useCartStore = create((set, get) => ({
   // ========================
   updateQuantity: async (usuarioId, productoId, newQuantity) => {
     const updated = get().items.map((i) =>
-      i.productoId === productoId ? { ...i, quantity: newQuantity } : i
+      i.productoId === productoId ? { ...i, cantidad: newQuantity } : i
     );
 
     set({ items: updated });
+
     const payloadItems = updated
-      .filter((i) => i.productoId !== undefined && i.productoId !== null)
-      .map((i) => ({ productoId: i.productoId, cantidad: Number(i.quantity) || 1 }));
+      .filter((i) => i.productoId != null)
+      .map((i) => ({
+        productoId: i.productoId,
+        cantidad: Number(i.cantidad),
+      }));
+
     try {
-      const res = await sincronizarCarrito(usuarioId, payloadItems);
-      console.debug('sincronizarCarrito response (updateQuantity):', res?.data || res);
+      await sincronizarCarrito(usuarioId, payloadItems);
     } catch (err) {
-      console.error('Error sincronizando carrito en updateQuantity:', err, 'payload=', payloadItems);
-      set({ error: 'Error sincronizando carrito' });
+      console.error("Error sincronizando carrito:", err);
+      set({ error: "Error sincronizando carrito" });
     }
   },
 
@@ -131,27 +147,26 @@ export const useCartStore = create((set, get) => ({
   // Eliminar item
   // ========================
   removeProduct: async (usuarioId, productoId) => {
-    const updated = get().items.filter(
-      (i) => i.productoId !== productoId
-    );
+    const updated = get().items.filter((i) => i.productoId !== productoId);
 
     set({ items: updated });
-    const payloadItems = updated
-      .filter((i) => i.productoId !== undefined && i.productoId !== null)
-      .map((i) => ({ productoId: i.productoId, cantidad: Number(i.quantity) || 1 }));
+
+    const payloadItems = updated.map((i) => ({
+      productoId: i.productoId,
+      cantidad: Number(i.cantidad),
+    }));
+
     try {
-      const res = await sincronizarCarrito(usuarioId, payloadItems);
-      console.debug('sincronizarCarrito response (removeProduct):', res?.data || res);
+      await sincronizarCarrito(usuarioId, payloadItems);
     } catch (err) {
-      console.error('Error sincronizando carrito en removeProduct:', err, 'payload=', payloadItems);
-      set({ error: 'Error sincronizando carrito' });
+      console.error("Error sincronizando carrito:", err);
+      set({ error: "Error sincronizando carrito" });
     }
   },
 
   // ========================
   // Total items
   // ========================
-  getTotalItems: () => {
-    return get().items.reduce((acc, i) => acc + i.quantity, 0);
-  },
+  getTotalItems: () =>
+    get().items.reduce((acc, i) => acc + Number(i.cantidad), 0),
 }));

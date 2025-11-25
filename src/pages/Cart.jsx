@@ -1,8 +1,7 @@
-
 import { FiMinus, FiPlus, FiTrash2 } from "react-icons/fi";
 import { useEffect } from "react";
 import { useCartStore } from "../store/useCartStore";
-import { useAuthStore } from "../store/useAuthStore"; 
+import { useAuthStore } from "../store/useAuthStore";
 import { Link } from "react-router-dom";
 
 export const Cart = () => {
@@ -10,11 +9,10 @@ export const Cart = () => {
 
   const {
     items,
+    loading,
     loadCart,
     updateQuantity,
     removeProduct,
-    getTotalItems,
-    loading,
   } = useCartStore();
 
   useEffect(() => {
@@ -26,7 +24,7 @@ export const Cart = () => {
   if (loading) return <p className="text-center mt-10">Cargando carrito...</p>;
 
   const subtotal = items.reduce(
-    (acc, item) => acc + (item.quantity || 0) * (item.precioUnitario || item.product?.precio || 0),
+    (acc, item) => acc + (item.cantidad || 0) * (item.precioUnitario || 0),
     0
   );
 
@@ -38,20 +36,21 @@ export const Cart = () => {
         </h1>
 
         <div className="mt-12 lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-12 xl:gap-x-16">
-
           {/* LISTA DEL CARRITO */}
           <section className="lg:col-span-7">
             {items.length > 0 ? (
               <ul className="divide-y divide-gray-200 border-t border-b border-gray-200">
                 {items.map((item) => {
-                  const product = item.product || item.producto || {};
+                  // Acceder al objeto producto correcto (puede venir como product o Product del backend)
+                  const product =  item.Product || {};
                   const imageSrc =
-                    product?.imagenUrl || product?.imagen || "https://via.placeholder.com/150";
+                    product?.imagenUrl ||
+                    "https://via.placeholder.com/150";
 
-                  const qty = item.quantity ?? item.cantidad ?? 1;
+                  const qty = item.cantidad ?? 1;
 
                   return (
-                    <li key={item.productoId || product.productoId} className="flex py-6">
+                    <li key={item.productoId} className="flex py-6">
                       <div className="shrink-0">
                         <img
                           src={imageSrc}
@@ -62,31 +61,38 @@ export const Cart = () => {
 
                       <div className="ml-4 flex flex-1 flex-col sm:ml-6">
                         <div className="relative pr-9 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:pr-0">
-
                           {/* Info */}
                           <div>
                             <h3 className="text-sm">
                               <Link
-                                to={`/productos/${item.productoId || product.productoId}`}
+                                to={`/productos/${item.productoId}`}
                                 className="font-medium text-gray-700 hover:text-gray-800"
                               >
                                 {product?.nombre}
                               </Link>
                             </h3>
-                            <p className="mt-1 text-sm text-gray-500">{product?.marca}</p>
+                            <p className="mt-1 text-sm text-gray-500">
+                              {product?.marca}
+                            </p>
                             <p className="mt-1 text-sm font-medium text-gray-900">
-                              ${Number(product?.precio || item.precioUnitario || 0).toLocaleString("es-CO")}
+                              $
+                              {Number(item.precioUnitario || 0).toLocaleString(
+                                "es-CO"
+                              )}
                             </p>
                           </div>
 
                           {/* Controles */}
                           <div className="mt-4 sm:mt-0 sm:pr-9">
                             <div className="flex items-center border rounded-md w-fit">
-
                               <button
                                 onClick={() => {
                                   const newQty = Math.max(1, qty - 1);
-                                  updateQuantity(user.usuarioId, item.productoId || product.productoId, newQty);
+                                  updateQuantity(
+                                    user.usuarioId,
+                                    item.productoId,
+                                    newQty
+                                  );
                                 }}
                                 className="px-3 py-1"
                                 disabled={qty <= 1}
@@ -99,7 +105,11 @@ export const Cart = () => {
                               <button
                                 onClick={() => {
                                   const newQty = qty + 1;
-                                  updateQuantity(user.usuarioId, item.productoId || product.productoId, newQty);
+                                  updateQuantity(
+                                    user.usuarioId,
+                                    item.productoId,
+                                    newQty
+                                  );
                                 }}
                                 className="px-3 py-1"
                               >
@@ -110,7 +120,7 @@ export const Cart = () => {
                             {/* ELIMINAR */}
                             <button
                               onClick={() =>
-                                removeProduct(user.usuarioId, item.productoId || product.productoId)
+                                removeProduct(user.usuarioId, item.productoId)
                               }
                               className="absolute top-0 right-0 text-gray-400 hover:text-red-500"
                               aria-label="Eliminar"
@@ -118,7 +128,6 @@ export const Cart = () => {
                               <FiTrash2 className="h-5 w-5" />
                             </button>
                           </div>
-
                         </div>
                       </div>
                     </li>
@@ -126,7 +135,9 @@ export const Cart = () => {
                 })}
               </ul>
             ) : (
-              <p className="py-8 text-center text-gray-500">Tu carrito está vacío.</p>
+              <p className="py-8 text-center text-gray-500">
+                Tu carrito está vacío.
+              </p>
             )}
           </section>
 
@@ -153,7 +164,6 @@ export const Cart = () => {
               </Link>
             </div>
           </section>
-
         </div>
       </div>
     </div>

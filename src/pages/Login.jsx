@@ -7,7 +7,7 @@ export default function Login() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
-
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isLoading) return;

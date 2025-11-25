@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { LoginUser, RegisterUser } from "../services/authService";
+import { useCartStore } from "./useCartStore";
 
 export const useAuthStore = create((set) => ({
   user: JSON.parse(localStorage.getItem("user")) || null,
@@ -59,6 +60,8 @@ export const useAuthStore = create((set) => ({
         loading: false,
         notification: user ? `¡Bienvenido/a de nuevo, ${user.nombre || ''}! Has iniciado sesión con éxito.` : null,
       });
+      const loadCart = useCartStore.getState().loadCart;
+      loadCart(user.usuarioId);
 
       return { success: true };
     } catch (err) {
@@ -73,7 +76,8 @@ export const useAuthStore = create((set) => ({
   logout: () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
-
+    const clearCart = useCartStore.getState().clearCart;
+    clearCart();
     set({
       user: null,
       token: null,
