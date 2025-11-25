@@ -14,6 +14,7 @@ const useProductStore = create((set) => ({
             set({error, loading: false});
         }
     },
+    
 }));
 
 export default useProductStore;
