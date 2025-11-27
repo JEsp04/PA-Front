@@ -7,13 +7,8 @@ import { Link } from "react-router-dom";
 export const Cart = () => {
   const { user } = useAuthStore();
 
-  const {
-    items,
-    loading,
-    loadCart,
-    updateQuantity,
-    removeProduct,
-  } = useCartStore();
+  const { items, loading, loadCart, updateQuantity, removeProduct } =
+    useCartStore();
 
   useEffect(() => {
     if (user?.usuarioId) {
@@ -42,10 +37,9 @@ export const Cart = () => {
               <ul className="divide-y divide-gray-200 border-t border-b border-gray-200">
                 {items.map((item) => {
                   // Acceder al objeto producto correcto (puede venir como product o Product del backend)
-                  const product =  item.Product || {};
+                  const product = item.Product || {};
                   const imageSrc =
-                    product?.imagenUrl ||
-                    "https://via.placeholder.com/150";
+                    product?.imagenUrl || "https://via.placeholder.com/150";
 
                   const qty = item.cantidad ?? 1;
 
@@ -157,7 +151,7 @@ export const Cart = () => {
 
             <div className="mt-6">
               <Link
-                to="/"
+                to="/checkout"
                 className="w-full inline-flex items-center justify-center rounded-md border border-transparent bg-[#D4AF37] py-3 px-4 text-base font-bold text-[#0A0A0A] hover:bg-[#B8860B]"
               >
                 Pagar ahora
