@@ -11,6 +11,7 @@ import ProductDetails from './pages/ProductDetails';
 import Login  from './pages/Login.jsx'; // Importa la página de login
 import Register from './pages/Register.jsx';
 import Notification from './components/Notificacion.jsx';
+import Payment from './pages/Payment.jsx';
 
 function AppContent() { // Creamos un componente interno para usar useLocation
   const location = useLocation();
@@ -38,9 +39,9 @@ function AppContent() { // Creamos un componente interno para usar useLocation
           <Route path="/productos/:productoId" element={<ProductDetails />} /> {/* Alias para enlaces que usan /product/... */}
           <Route path="/search" element={<SearchResults />} /> {/* Nueva ruta para la búsqueda */}
           <Route path="/carrito" element={<Cart />} /> {/* Nueva ruta para el carrito */}
-          <Route path="/Autenticacion" element={<Login />} /> {/* Nueva ruta para la autenticacion */}
-          <Route path="/Autenticacion/Registro" element={<Register />} /> {/* Nueva ruta para la autenticacion */}
-
+          <Route path="/Autenticacion/Login" element={<Login />} /> {/* Nueva ruta para la autenticacion */}
+          <Route path="/Autenticacion/Register" element={<Register />} /> {/* Nueva ruta para la autenticacion */}
+          <Route path="/checkout" element={<Payment />} />
         </Routes>
       </main>
       {shouldShowFooter && <Footer />} {/* Renderiza el Footer condicionalmente */}

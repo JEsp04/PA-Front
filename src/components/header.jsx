@@ -228,14 +228,23 @@ export const Header = () => {
                       className="absolute right-0 mt-3 bg-white shadow-xl rounded-xl p-4 w-56 border border-gray-100"
                     >
                       {!isAuthenticated ? (
-                        // Si NO está logueado → botón de iniciar sesión
-                        <Link
-                          to="/Autenticacion"
-                          className="block text-center text-gray-700 hover:text-black font-semibold"
-                          onClick={() => setUserMenuOpen(false)}
-                        >
-                          Iniciar sesión
-                        </Link>
+                        <>
+                          <Link
+                            to="/Autenticacion/Login"
+                            className="block text-center text-[#6E6E6E] hover:text-[#D4AF37] font-semibold mb-2"
+                            onClick={() => setUserMenuOpen(false)}
+                          >
+                            Iniciar sesión
+                          </Link>
+
+                          <Link
+                            to="/Autenticacion/Register"
+                            className="block text-center text-[#6E6E6E] hover:text-[#D4AF37] font-semibold"
+                            onClick={() => setUserMenuOpen(false)}
+                          >
+                            Registrarse
+                          </Link>
+                        </>
                       ) : (
                         <>
                           <p className="font-semibold text-gray-800">
