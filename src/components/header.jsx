@@ -255,13 +255,6 @@ export const Header = () => {
                           <div className="h-px bg-gray-200 my-3" />
 
                           <Link
-                            to="/perfil"
-                            className="block text-gray-700 hover:text-black mb-2"
-                          >
-                            Mi perfil
-                          </Link>
-
-                          <Link
                             to="/pedidos"
                             className="block text-gray-700 hover:text-black mb-2"
                           >
@@ -272,6 +265,7 @@ export const Header = () => {
                             onClick={() => {
                               logout();
                               setUserMenuOpen(false);
+                              navigate("/");
                             }}
                             className="block w-full text-left text-red-500 hover:text-red-700 font-semibold"
                           >
