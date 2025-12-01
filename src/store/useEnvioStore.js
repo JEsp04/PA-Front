@@ -1,9 +1,18 @@
+// 🟦 useEnvioStore.js
 import { create } from "zustand";
-import { crearEnvio } from "../services/envioService";
+import {
+  crearEnvio,
+  obtenerEnviosPorUsuario,
+} from "../services/envioService";
 
 export const useEnvioStore = create((set) => ({
   loading: false,
   error: null,
+  envios: [], // <- aquí se guardarán los envíos del usuario
+
+  // ============================
+  // 🔵 Crear un envío
+  // ============================
   createEnvio: async (
     ordenId,
     direccionEnvio,
@@ -13,8 +22,9 @@ export const useEnvioStore = create((set) => ({
     estadoEnvio
   ) => {
     set({ loading: true, error: null });
+
     try {
-      await crearEnvio(
+      const nuevoEnvio = await crearEnvio(
         ordenId,
         direccionEnvio,
         ciudad,
@@ -22,10 +32,40 @@ export const useEnvioStore = create((set) => ({
         codigoPostal,
         estadoEnvio
       );
-      set({ loading: false });
+
+      // Opcional: agregarlo al store sin tener que recargar
+      set((state) => ({
+        loading: false,
+        envios: [...state.envios, nuevoEnvio],
+      }));
     } catch (error) {
-      console.error("Error creating envio:", error);
-      set({ loading: false, error: error.response?.data || error.message });
+      console.error("Error creando envío:", error);
+      set({
+        loading: false,
+        error: error.response?.data || error.message,
+      });
+    }
+  },
+
+  // ============================
+  // 🔵 Obtener envíos del usuario
+  // ============================
+  fetchEnviosUsuario: async (usuarioId) => {
+    set({ loading: true, error: null });
+
+    try {
+      const data = await obtenerEnviosPorUsuario(usuarioId);
+
+      set({
+        loading: false,
+        envios: data, // <-- aquí queda el array listo para renderizar
+      });
+    } catch (error) {
+      console.error("Error obteniendo envíos:", error);
+      set({
+        loading: false,
+        error: error.response?.data || error.message,
+      });
     }
   },
 }));

@@ -33,3 +33,18 @@ export const crearEnvio = async (
     throw error;
   }
 };
+
+export const obtenerEnviosPorUsuario = async (usuarioId) => {
+  try {
+    const response = await api.get(`/envios/usuarioEnvios/${usuarioId}`);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error obteniendo envios por usuario:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
+
