@@ -8,21 +8,21 @@ const slidesData = [
     title: 'Descubre tu Esencia',
     description: 'Explora fragancias que capturan la esencia de la naturaleza y la sofisticación.',
     cta: 'Ver Novedades',
-    link: '/new-arrivals',
+    link: '/novedades',
   },
   {
     image: "https://disfragancias.com/cdn/shop/files/28-jun-mobile.webp?v=1751382737&width=750",
     title: 'Elegancia Masculina',
     description: 'Aromas audaces y refinados diseñados para el hombre moderno.',
     cta: 'Colección Hombre',
-    link: '/men',
+    link: '/hombre',
   },
   {
     image: "https://plus.unsplash.com/premium_photo-1679106770086-f4355693be1b?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=687",
     title: 'Aura Femenina',
     description: 'Fragancias florales y exóticas que celebran la feminidad en todas sus formas.',
     cta: 'Colección Mujer',
-    link: '/women',
+    link: '/mujer',
   },
 ];
 

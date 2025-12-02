@@ -1,20 +1,39 @@
-import './App.css'
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'; // Importa useLocation
-import { Header } from './components/Header.jsx'
-import { Home } from './pages/Home.jsx'
-import { Footer } from './components/Footer'; // Importa el nuevo componente Footer
-import { AboutUs } from './pages/AboutUs'; // Importa tu nueva página
-import { Offers } from './pages/Offers'; // Importa tu nueva página de Ofertas
-import { SearchResults } from './pages/SearchResults'; // Importa la página de resultados de búsqueda
-import {Cart} from './pages/Cart'; // Importa la nueva página del carrito
-import ProductDetails from './pages/ProductDetails';
-import Login  from './pages/Login.jsx'; // Importa la página de login
-import Register from './pages/Register.jsx';
-import Notification from './components/Notificacion.jsx';
-import Payment from './pages/Payment.jsx';
-import Pedidos from './pages/Pedidos.jsx';
+import "./App.css";
+import { useEffect } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom"; // Importa useLocation
+import useProductStore from "./store/useProductStore";
+import { Header } from "./components/Header.jsx";
+import { Home } from "./pages/Home.jsx";
+import { Marcas } from "./pages/Marcas";
+import { Footer } from "./components/Footer"; // Importa el nuevo componente Footer
+import { AboutUs } from "./pages/AboutUs"; // Importa tu nueva página
+import { Mujer } from "./pages/Mujer"; // Importa tu nueva página de Mujer
+import { Colecciones } from "./pages/Colecciones.jsx";
+import { Hombre } from "./pages/Hombre"; // Importa tu nueva página de Hombre
+import { Novedades } from "./pages/Novedades"; // Importa tu nueva página de Novedades
+import { Offers } from "./pages/Offers"; // Importa tu nueva página de Ofertas
+import { SearchResults } from "./pages/SearchResults"; // Importa la página de resultados de búsqueda
+import { Cart } from "./pages/Cart"; // Importa la nueva página del carrito
+import ProductDetails from "./pages/ProductDetails";
+import Login from "./pages/Login.jsx"; // Importa la página de login
+import Register from "./pages/Register.jsx";
+import Notification from "./components/Notificacion.jsx";
+import Payment from "./pages/Payment.jsx";
+import Pedidos from "./pages/Pedidos.jsx";
 
-function AppContent() { // Creamos un componente interno para usar useLocation
+function AppContent() {
+  // Creamos un componente interno para usar useLocation
+  const fetchProducts = useProductStore((state) => state.fetchProducts);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
   const location = useLocation();
 
   // Define las rutas donde el Header NO debe aparecer
@@ -28,33 +47,50 @@ function AppContent() { // Creamos un componente interno para usar useLocation
   const shouldShowFooter = !noFooterPaths.includes(location.pathname);
 
   return (
-    <div className='min-h-screen bg-white flex flex-col'>
+    <div className="min-h-screen bg-white flex flex-col">
       <Notification /> {/* Componente de notificaciones */}
-      {shouldShowHeader && <Header />} {/* Renderiza el Header condicionalmente */}
-      
+      {shouldShowHeader && <Header />}{" "}
+      {/* Renderiza el Header condicionalmente */}
       <main className="grow">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/marcas" element={<Marcas />} />
           <Route path="/sobre-nosotros" element={<AboutUs />} />
-          <Route path="/ofertas" element={<Offers />} /> {/* Nueva ruta para Ofertas */}
-          <Route path="/productos/:productoId" element={<ProductDetails />} /> {/* Alias para enlaces que usan /product/... */}
-          <Route path="/search" element={<SearchResults />} /> {/* Nueva ruta para la búsqueda */}
-          <Route path="/carrito" element={<Cart />} /> {/* Nueva ruta para el carrito */}
-          <Route path="/Autenticacion/Login" element={<Login />} /> {/* Nueva ruta para la autenticacion */}
-          <Route path="/Autenticacion/Register" element={<Register />} /> {/* Nueva ruta para la autenticacion */}
+          <Route path="/mujer" element={<Mujer />} />
+          <Route path="/hombre" element={<Hombre />} />
+          <Route path="/novedades" element={<Novedades />} />
+          <Route path="/colecciones" element={<Colecciones />} />
+          <Route path="/ofertas" element={<Offers />} />{" "}
+          {/* Nueva ruta para Ofertas */}
+          <Route
+            path="/productos/:productoId"
+            element={<ProductDetails />}
+          />{" "}
+          {/* Alias para enlaces que usan /product/... */}
+          <Route path="/search" element={<SearchResults />} />{" "}
+          {/* Nueva ruta para la búsqueda */}
+          <Route path="/carrito" element={<Cart />} />{" "}
+          {/* Nueva ruta para el carrito */}
+          <Route path="/Autenticacion/Login" element={<Login />} />{" "}
+          {/* Nueva ruta para la autenticacion */}
+          <Route path="/Autenticacion/Register" element={<Register />} />{" "}
+          {/* Nueva ruta para la autenticacion */}
           <Route path="/checkout" element={<Payment />} />
           <Route path="/pedidos" element={<Pedidos />} />
         </Routes>
       </main>
-      {shouldShowFooter && <Footer />} {/* Renderiza el Footer condicionalmente */}
+      {shouldShowFooter && <Footer />}{" "}
+      {/* Renderiza el Footer condicionalmente */}
     </div>
   );
 }
 
 export default function App() {
   return (
-    <Router> {/* Envuelve toda la aplicación en BrowserRouter */}
+    <Router>
+      {" "}
+      {/* Envuelve toda la aplicación en BrowserRouter */}
       <AppContent /> {/* Renderiza el nuevo componente AppContent */}
     </Router>
-  )
+  );
 }

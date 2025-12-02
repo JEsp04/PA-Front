@@ -33,6 +33,9 @@ const Payment = () => {
 
   const [formErrors, setFormErrors] = useState({});
   const [selectedDireccionId, setSelectedDireccionId] = useState(null);
+  const [isProcessingAnim, setIsProcessingAnim] = useState(false);
+  const [deliveryDate, setDeliveryDate] = useState(null);
+  const [isConfirmationVisible, setIsConfirmationVisible] = useState(false);
 
   const usuarioId = user?.usuarioId || user?.id;
 
@@ -97,7 +100,7 @@ const Payment = () => {
 
   // -------------------- SUBMIT PAGO -----------------------
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
 
     if (!direccionDefault) {
       alert("Debes agregar una dirección antes de pagar.");
@@ -112,10 +115,42 @@ const Payment = () => {
 
     if (paymentMethod === "creditCard" && !validateForm()) return;
 
+    // Mostrar animación de procesamiento por 5 segundos
     try {
-      await processPayment(usuarioId, paymentMethod, selectedDireccionId);
+      setIsProcessingAnim(true);
+
+      await new Promise((res) => setTimeout(res, 5000));
+
+      const result = await processPayment(
+        usuarioId,
+        paymentMethod,
+        selectedDireccionId
+      );
+
+      setIsProcessingAnim(false);
+
+      // Mostrar confirmación con fecha estimada de entrega si está disponible
+      const fechaEntrega =
+        result?.envio?.fechaEntrega || result?.envio?.fechaEntrega;
+      if (fechaEntrega) {
+        const date = new Date(fechaEntrega);
+        setDeliveryDate(
+          date.toLocaleDateString("es-ES", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        );
+        setIsConfirmationVisible(true);
+
+        // mostrar confirmación breve antes de redirigir
+        await new Promise((res) => setTimeout(res, 2500));
+      }
+
       navigate("/pedidos");
-    } catch {
+    } catch (err) {
+      setIsProcessingAnim(false);
       alert("Error procesando el pago.");
     }
   };
@@ -333,11 +368,11 @@ const Payment = () => {
 
                 <button
                   onClick={handleSubmit}
-                  disabled={loading}
+                  disabled={loading || isProcessingAnim}
                   className="w-full mt-6 py-4 bg-[#D4AF37] hover:bg-[#B8860B] text-black font-bold rounded-md flex items-center justify-center gap-2"
                 >
                   <FiLock />
-                  {loading
+                  {loading || isProcessingAnim
                     ? "Procesando..."
                     : `Pagar $${subtotal.toLocaleString("es-CO")}`}
                 </button>
@@ -350,6 +385,29 @@ const Payment = () => {
       </div>
 
       {/* MODAL DIRECCIÓN */}
+      {isProcessingAnim && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg flex flex-col items-center gap-4">
+            <div className="w-16 h-16 border-4 border-t-4 border-gray-200 border-t-[#D4AF37] rounded-full animate-spin"></div>
+            <p className="font-semibold">Procesando pago...</p>
+          </div>
+        </div>
+      )}
+      {isConfirmationVisible && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg flex flex-col items-center gap-4">
+            <div className="w-16 h-16 flex items-center justify-center rounded-full bg-green-100 text-green-600 text-2xl">
+              ✓
+            </div>
+            <p className="font-semibold">Pago realizado con éxito</p>
+            {deliveryDate && (
+              <p className="text-sm text-gray-600">
+                Fecha estimada de entrega: <b>{deliveryDate}</b>
+              </p>
+            )}
+          </div>
+        </div>
+      )}
       <AddressModal
         isOpen={isAddressModalOpen}
         onClose={() => {

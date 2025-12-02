@@ -44,6 +44,14 @@ function PedidoCard({ envio, user }) {
   const fecha = orden?.createdAt
     ? new Date(orden.createdAt).toLocaleDateString()
     : "N/A";
+  const fechaEntrega = envio?.fechaEntrega
+    ? new Date(envio.fechaEntrega).toLocaleDateString("es-ES", {
+        weekday: "short",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
+    : null;
   const total = orden?.total || 0;
   const nombreUsuario = user?.nombre || "Cliente";
 
@@ -53,7 +61,15 @@ function PedidoCard({ envio, user }) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
         <div>
           <p className="text-gray-600">Pedido realizado</p>
-          <p className="font-semibold text-gray-800">{fecha}</p>
+          <p className="font-semibold text-gray-800">
+            {fecha}
+            {fechaEntrega && (
+              <span className="text-sm text-gray-600">
+                {" "}
+                — Llega en {fechaEntrega}
+              </span>
+            )}
+          </p>
         </div>
         <div>
           <p className="text-gray-600">Total</p>
