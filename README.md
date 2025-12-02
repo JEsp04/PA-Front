@@ -41,9 +41,4 @@ Pruebas rápidas
 - Regístrate / inicia sesión.
 - Agrega productos al carrito y procede a pagar en `/payment`.
 
-Notas para entrega
-
-- Incluye captura de pantalla del diagrama ER y del flujo de la app (opcional).
-- Asegúrate de que el backend tenga la base de datos con datos de ejemplo (usa el endpoint `POST /api/productos/cargarProductos` del backend para cargar `data/productSeed.json`).
-
 
